@@ -100,7 +100,7 @@ class RoutingService @Inject()(cache: SyncCacheApi) {
     */
   private def buildResponse(route: List[String]): Option[List[String]] = {
     try {
-      val routeWithDesc = scala.collection.mutable.ListBuffer[String]()
+      var routeWithDesc = scala.collection.mutable.ListBuffer[String]()
       val stationCodeLineMap = route.map(f => (f.slice(0, 2), f))
       for (i <- 0 to stationCodeLineMap.size - 2) {
         val startRoute = stationCodeLineMap(i)
@@ -111,7 +111,18 @@ class RoutingService @Inject()(cache: SyncCacheApi) {
           routeWithDesc.+=(s"Change from ${startRoute._1} line to ${endRoute._1} line")
         }
       }
-      Some(routeWithDesc.toList)
+      Try {
+        if (routeWithDesc.last.contains("Change from") && routeWithDesc.head.contains("Change from")) {
+          routeWithDesc = routeWithDesc.slice(1, routeWithDesc.size - 2)
+        }
+        if (routeWithDesc.last.contains("Change from")) {
+          routeWithDesc = routeWithDesc.drop(1).dropRight(1)
+        }
+        if (routeWithDesc.head.contains("Change from")) {
+          routeWithDesc = routeWithDesc.slice(1, routeWithDesc.size - 1)
+        }
+        routeWithDesc.toList
+      }.toOption
     } catch {
       case e: Exception =>
         logger.error("Exception while building response: ", e)
