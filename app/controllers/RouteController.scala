@@ -20,14 +20,14 @@ class RouteController @Inject()(cc: ControllerComponents)(cache: AsyncCacheApi, 
     (routingService.validateStationCodes(from.toLowerCase), routingService.validateStationCodes(to.toLowerCase)) match {
       case (true, true) =>
         routingService.suggestRoute(from.toLowerCase, to.toLowerCase) map {
-          case Some(route) => Ok(Json.toJson(Json.obj("route" -> route)))
-          case None => Ok("No route available for the given stations")
+          case Some(route) => Ok(Json.toJson(Json.obj("msg" -> "Successfully found the route","route" -> route)))
+          case None => Ok(Json.toJson(Json.obj("msg"-> "No route available for the given stations")))
         } recover {
           case _: Throwable =>
             InternalServerError
         }
       case _ =>
-        Future.successful(BadRequest("Invalid station code(s), please check and try again"))
+        Future.successful(BadRequest(Json.toJson(Json.obj("msg"-> "Invalid station code(s), please check and try again"))))
     }
   }
 }
